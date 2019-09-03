@@ -9,8 +9,11 @@ import (
 )
 
 func main() {
+
 	r := mux.NewRouter()
 	r.HandleFunc("/list", listHandler)
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend/public")))
+
 	err := http.ListenAndServe(":8800", r)
 	if err != nil {
 		log.Println(err)
