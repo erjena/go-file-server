@@ -5,12 +5,18 @@ import axios from "axios"
 class App extends React.Component{
   constructor(props) {
     super(props)
+
+    this.state = {
+      files: []
+    }
   }
 
   componentDidMount(event) {
     axios.get('/list')
       .then((response) => {
-        console.log('success', response);
+        this.setState({
+          files: response.data
+        })
       })
       .catch((error) => {
         console.log(error)
@@ -18,8 +24,13 @@ class App extends React.Component{
   }
 
   render() {
+    let list = this.state.files.map((file) => 
+      <div key={file.name}>{file.name}</div> 
+    )
     return (
-      <div>I am React</div>
+      <div>
+        {list}
+      </div>
     )
   }
 }
