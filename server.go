@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -14,8 +15,9 @@ var workdir string
 
 // FileObject object for client
 type FileObject struct {
-	Name  string `json:"name"`
-	IsDir bool   `json:"is_dir"`
+	Name    string    `json:"name"`
+	IsDir   bool      `json:"is_dir"`
+	ModTime time.Time `json:"mod_time"`
 }
 
 func validateWorkdir() {
@@ -40,25 +42,25 @@ func setupServer() {
 	}
 }
 
-func main() {
-	validateWorkdir()
-	setupServer()
-}
-
 func listHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("reading from %v", workdir)
 	files, err := ioutil.ReadDir(workdir)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	w.WriteHeader(http.StatusOK)
 	var fileObjects []FileObject
 	for _, file := range files {
-		fileObjects = append(fileObjects, FileObject{file.Name(), file.IsDir()})
+		fileObjects = append(fileObjects, FileObject{file.Name(), file.IsDir(), file.ModTime()})
 	}
+
 	err = json.NewEncoder(w).Encode(fileObjects)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func main() {
+	validateWorkdir()
+	setupServer()
 }
