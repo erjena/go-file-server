@@ -33,7 +33,9 @@ func validateWorkdir() {
 
 func setupServer() {
 	r := mux.NewRouter()
-	r.HandleFunc("/list", listHandler)
+	r.Path("/list").Queries("dir", "{xxx}").HandlerFunc(listHandler)
+	// r.HandleFunc("/list", listHandler)
+	// r.HandleFunc("/list/{dirName}", listHandler)
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend/public")))
 
 	err := http.ListenAndServe(":8800", r)
@@ -43,8 +45,13 @@ func setupServer() {
 }
 
 func listHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("reading from %v", workdir)
-	files, err := ioutil.ReadDir(workdir)
+	currDir := workdir
+	vars := mux.Vars(r)
+	if vars["xxx"] != "" {
+		currDir = workdir + vars["xxx"]
+	}
+	log.Printf("reading from %v", currDir)
+	files, err := ioutil.ReadDir(currDir)
 	if err != nil {
 		log.Fatal(err)
 	}

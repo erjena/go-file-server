@@ -1,40 +1,34 @@
 import React from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
-import "../public/main.css";
+import { faFolderOpen } from '@fortawesome/free-solid-svg-icons';
 
-let ListDir = ({ dirs }) => (
-  <div>
-  {dirs.map(dir => (
-  <span key={dir}>
-    <p><FontAwesomeIcon icon={faFolderOpen} size="2x" className="icon"/>  {dir} </p>
-    <p className="HorizontalLine">
-      ______________________________________________________________________________________
-    </p>
-    </span>
-  ))}
-  </div>
-)
+class ListDir extends React.Component {
+  constructor(props) {
+    super(props)
 
-// class ListDir extends React.Component {
-//   constructor(props) {
-//     super(props)
-//   }
+    this.handleClick = this.handleClick.bind(this);
+  }
 
-//   render() {
-//     console.log(this.props.dirs)
-//     let list = this.props.dirs.map((dir) => {
-//       <span>
-//         <p>Here goes icon: </p><p>dir</p>
-//         <p>---------------------------------------------------------------------------------</p>
-//       </span>
-//     })
-//     return (
-//       <div>
-//         {list}
-//       </div>
-//     )
-//   }
-// }
+  handleClick(event) {
+    this.props.onClick(event.target.id);
+  }
+
+  render() {
+    let list = this.props.dirs.map((dir) => (
+      <span key={dir}>
+      <p id={dir} onClick={this.handleClick}>
+        <FontAwesomeIcon icon={faFolderOpen} size="1x" className="icon"/>
+        {dir}
+      </p>
+      <hr className="HorizontalLine"></hr>
+      </span>
+    ))
+    return (
+      <div>
+        {list}
+      </div>
+    )
+  }
+}
 
 export default ListDir;
