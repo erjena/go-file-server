@@ -16,91 +16,80 @@ class App extends React.Component{
       dirs: []
     }
 
-    this.processData = this.processData.bind(this);
+    this.requestFolder = this.requestFolder.bind(this);
     this.handleDirClick = this.handleDirClick.bind(this);
     this.handlePathClick = this.handlePathClick.bind(this);
+    this.handleDownload = this.handleDownload.bind(this);
   }
 
   componentDidMount(event) {
-    axios.get('/list?dir=')
-      .then((response) => {
-        this.processData(response.data)
-      })
-      .catch((error) => {
-        console.log(error)
-      })
+    this.requestFolder([]);
   }
 
-  processData(data, dirName) {
-    let files = [];
-    let dirs = [];
-    for (let i = 0; i < data.length; i++) {
-      if (data[i].is_dir) {
-        dirs.push(data[i].name);
-      } else {
-        files.push({
-          "name": data[i].name,
-          "last_modify": data[i].mod_time.slice(0, 10)
-        });
-      }
-    }
-
-    let stack = [];
-    if (dirName) {
-      if (dirName !== this.state.stack[this.state.stack.length-1]) {
-        stack.push(dirName)
-        stack = this.state.stack.concat(stack);
-        this.setState({ stack: stack })
-      }
-    }
-
-    this.setState({
-      files: files,
-      dirs: dirs
-    })
-    console.log('stack', this.state.stack)
-  }
-
-  handleDirClick(dirName) {
-    let id = encodeURI(this.state.stack.join('/'));
-    axios.get(`/list?dir=${id}`)
+  requestFolder(newStack) {
+    axios.post('/list', { path: newStack })
     .then((response) => {
-      this.processData(response.data, dirName)
+      let files = [];
+      let dirs = [];
+      for (let i = 0; i < response.data.length; i++) {
+        if (response.data[i].is_dir) {
+          dirs.push(response.data[i].name);
+        } else {
+          files.push({
+            "name": response.data[i].name,
+            "last_modify": response.data[i].mod_time.slice(0, 10)
+          });
+        }
+      }
+  
+      this.setState({
+        stack: newStack,
+        files: files,
+        dirs: dirs
+      })
     })
     .catch((error) => {
       console.log(error)
     })
   }
 
-  handlePathClick(folderName) {
-    let path = [];
-    for (let i = 0; i < this.state.stack.length; i++) {
-      if (this.state.stack[i] === folderName) {
-        path = this.state.stack.slice(0, i+1);
-        break;
-      }
-    }
+  handleDirClick(dirName) {
+    let newStack = this.state.stack.slice();
+    newStack.push(dirName);
+    this.requestFolder(newStack);
+  }
 
-    this.setState({
-      stack: path
-    })
-    this.handleDirClick();
+  handlePathClick(ind) {
+    let newStack = this.state.stack.slice(0, ind+1); 
+    this.requestFolder(newStack);
   }
 
   // handleUpload() {
 
   // }
 
-  // handleDownload() {
-
-  // }
+  handleDownload(fileName) {
+    // console.log('client side ', fileName)
+    let idx = this.state.stack.indexOf(fileName);
+    let path = this.state.stack.slice(0, idx+1).join('/');
+    axios.post('/download', {
+      path: encodeURI(path)
+    })
+    .then((response) => {
+      console.log('response from download', response);
+    })
+    .catch((err) => {
+      console.log(err)
+    })
+  }
 
   render() {
     return (
       <div className="list">
         <RenderPath path={this.state.stack} onClick={this.handlePathClick} />
         <ListDir dirs={this.state.dirs} onClick={this.handleDirClick} />
-        <ListFiles files={this.state.files} />
+        <ListFiles files={this.state.files} onClick={this.handleDownload}/>
+        <button className="uploadButton" onClick={this.handleUpload}> Upload </button>
       </div>
     )
   }

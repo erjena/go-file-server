@@ -14,18 +14,22 @@ class RenderPath extends React.Component {
   }
 
   render() {
-    let renderPath = this.props.path.map((folderName) => (
-      <span key={folderName}>
+    console.log('path', this.props.path)
+    let renderPath = this.props.path.map((folderName, i) => (
+      <span key={i}>
         <span className="rightArrow">
           <FontAwesomeIcon icon={faAngleRight} size="sm" />
         </span>
-        <p id={folderName} className="renderPath" onClick={this.handleClick}>
+        <p id={i} className="renderPath" onClick={this.handleClick}>
           {folderName}
         </p>
       </span>
     ))
     return (
       <div>
+        <span>
+          <p id={-1} className="renderPath" onClick={this.handleClick}> Root </p>
+        </span>
         {renderPath}
       </div>
     )

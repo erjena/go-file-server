@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -18,6 +19,10 @@ type FileObject struct {
 	Name    string    `json:"name"`
 	IsDir   bool      `json:"is_dir"`
 	ModTime time.Time `json:"mod_time"`
+}
+
+type ReqBody struct {
+	Path *[]string `json:"path"`
 }
 
 func validateWorkdir() {
@@ -33,9 +38,9 @@ func validateWorkdir() {
 
 func setupServer() {
 	r := mux.NewRouter()
-	r.Path("/list").Queries("dir", "{xxx}").HandlerFunc(listHandler)
-	// r.HandleFunc("/list", listHandler)
-	// r.HandleFunc("/list/{dirName}", listHandler)
+	r.Methods("POST").Path("/list").HandlerFunc(listHandler)
+	//r.Path("/download").Queries("path", "{path}").HandleFunc(downloadFile)
+
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend/public")))
 
 	err := http.ListenAndServe(":8800", r)
@@ -45,15 +50,27 @@ func setupServer() {
 }
 
 func listHandler(w http.ResponseWriter, r *http.Request) {
-	currDir := workdir
-	vars := mux.Vars(r)
-	if vars["xxx"] != "" {
-		currDir = workdir + vars["xxx"]
+	var req *ReqBody
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Was not able to parse path %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
+
+	if req.Path == nil {
+		log.Printf("Missing path")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	currDir := workdir + "/" + strings.Join(*req.Path, "/")
 	log.Printf("reading from %v", currDir)
+
 	files, err := ioutil.ReadDir(currDir)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Unable to read directory %v, request was %v", err, *req.Path)
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	var fileObjects []FileObject
@@ -63,9 +80,15 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(fileObjects)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Was not able to encode %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 }
+
+// func downloadFile(filepath string) {
+
+// }
 
 func main() {
 	validateWorkdir()
