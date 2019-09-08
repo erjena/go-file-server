@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -21,9 +22,18 @@ type FileObject struct {
 	ModTime time.Time `json:"mod_time"`
 }
 
-type ReqBody struct {
+// GeneralRequest use for other than rename requests
+type GeneralRequest struct {
 	Path *[]string `json:"path"`
 }
+
+// RenameRequest to rename file
+type RenameRequest struct {
+	OldPath *[]string `json:"old_path"`
+	NewPath *[]string `json:"new_path"`
+}
+
+type FileContent string
 
 func validateWorkdir() {
 	if len(os.Args) != 2 {
@@ -39,7 +49,7 @@ func validateWorkdir() {
 func setupServer() {
 	r := mux.NewRouter()
 	r.Methods("POST").Path("/list").HandlerFunc(listHandler)
-	//r.Path("/download").Queries("path", "{path}").HandleFunc(downloadFile)
+	r.Methods("POST").Path("/download").HandlerFunc(downloadHandler)
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend/public")))
 
@@ -50,7 +60,7 @@ func setupServer() {
 }
 
 func listHandler(w http.ResponseWriter, r *http.Request) {
-	var req *ReqBody
+	var req *GeneralRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("Was not able to parse path %v", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -86,9 +96,42 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// func downloadFile(filepath string) {
+func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	var req *GeneralRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Was not able to parse path %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-// }
+	if req.Path == nil {
+		log.Printf("Missing path")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	currDir := workdir + strings.Join(*req.Path, "/")
+
+	// reading and printing file content
+	bytesArray, err := ioutil.ReadFile(currDir)
+	if err != nil {
+		log.Printf("Was not able to read the file %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	buffer := bytes.NewBuffer(bytesArray)
+	fileName := (*req.Path)[len(*req.Path)-1]
+	w.Header().Set("Content-Disposition", "attachment;filename="+fileName)
+	w.Header().Set("Content-Type", "application/octet-stream")
+
+	// write
+	if _, err := buffer.WriteTo(w); err != nil {
+		log.Printf("Was not able to write the file %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+}
 
 func main() {
 	validateWorkdir()

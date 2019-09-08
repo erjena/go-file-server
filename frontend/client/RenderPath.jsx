@@ -14,7 +14,6 @@ class RenderPath extends React.Component {
   }
 
   render() {
-    console.log('path', this.props.path)
     let renderPath = this.props.path.map((folderName, i) => (
       <span key={i}>
         <span className="rightArrow">

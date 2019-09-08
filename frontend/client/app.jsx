@@ -1,6 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import axios from "axios";
+import fileDownload from "js-file-download";
+import contentDisposition from "content-disposition";
 import RenderPath from "./RenderPath";
 import ListDir from "./ListDir";
 import ListFiles from "./ListFiles";
@@ -69,14 +71,15 @@ class App extends React.Component{
   // }
 
   handleDownload(fileName) {
-    // console.log('client side ', fileName)
-    let idx = this.state.stack.indexOf(fileName);
-    let path = this.state.stack.slice(0, idx+1).join('/');
+    let path = this.state.stack.slice();
+    path.push(fileName)
     axios.post('/download', {
-      path: encodeURI(path)
+      path: path
     })
     .then((response) => {
-      console.log('response from download', response);
+      let disposition = contentDisposition.parse(response.headers["content-disposition"]);
+      let fileName = disposition.parameters.filename;
+      fileDownload(response.data, fileName)
     })
     .catch((err) => {
       console.log(err)
