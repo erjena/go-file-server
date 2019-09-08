@@ -33,8 +33,6 @@ type RenameRequest struct {
 	NewPath *[]string `json:"new_path"`
 }
 
-type FileContent string
-
 func validateWorkdir() {
 	if len(os.Args) != 2 {
 		log.Fatal("Expected path to directory")
@@ -50,6 +48,7 @@ func setupServer() {
 	r := mux.NewRouter()
 	r.Methods("POST").Path("/list").HandlerFunc(listHandler)
 	r.Methods("POST").Path("/download").HandlerFunc(downloadHandler)
+	r.Methods("POST").Path("/delete").HandlerFunc(deleteHandler)
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend/public")))
 
@@ -109,10 +108,10 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	currDir := workdir + strings.Join(*req.Path, "/")
+	currFile := workdir + strings.Join(*req.Path, "/")
 
 	// reading and printing file content
-	bytesArray, err := ioutil.ReadFile(currDir)
+	bytesArray, err := ioutil.ReadFile(currFile)
 	if err != nil {
 		log.Printf("Was not able to read the file %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -130,7 +129,34 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
 
+func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	var req *GeneralRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Was not able to parse path %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if req.Path == nil {
+		log.Printf("Missing path")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	currFile := workdir + strings.Join(*req.Path, "/")
+
+	info, err := os.Stat(currFile)
+	if err != nil {
+		log.Printf("Was not able to get file information %v", err)
+		return
+	}
+
+	if info.IsDir() {
+		os.RemoveAll(currFile)
+	} else {
+		os.Remove(currFile)
+	}
 }
 
 func main() {

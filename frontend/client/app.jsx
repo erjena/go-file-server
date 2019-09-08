@@ -22,6 +22,7 @@ class App extends React.Component{
     this.handleDirClick = this.handleDirClick.bind(this);
     this.handlePathClick = this.handlePathClick.bind(this);
     this.handleDownload = this.handleDownload.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
   }
 
   componentDidMount(event) {
@@ -86,12 +87,36 @@ class App extends React.Component{
     })
   }
 
+  handleDelete(fileName, isDir) {
+    let path = this.state.stack.slice();
+    path.push(fileName)
+    axios.post('/delete', {
+      path: path
+    })
+    .then((response) => {
+      if (isDir) {
+        let dir = this.state.dirs.slice();
+        let idx = dir.indexOf(fileName);
+        dir.splice(idx, 1); 
+        this.setState({ dirs: dir })
+      } else {
+        let files = this.state.files.slice();
+        let idx = files.indexOf(fileName);
+        files.splice(idx, 1); 
+        this.setState({ files: files })
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    })
+  }
+
   render() {
     return (
       <div className="list">
         <RenderPath path={this.state.stack} onClick={this.handlePathClick} />
-        <ListDir dirs={this.state.dirs} onClick={this.handleDirClick} />
-        <ListFiles files={this.state.files} onClick={this.handleDownload}/>
+        <ListDir dirs={this.state.dirs} onClick={this.handleDirClick} onDeleteClick={this.handleDelete} />
+        <ListFiles files={this.state.files} onClick={this.handleDownload} onDeleteClick={this.handleDelete} />
         <button className="uploadButton" onClick={this.handleUpload}> Upload </button>
       </div>
     )
