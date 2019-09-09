@@ -42,10 +42,12 @@ class App extends React.Component{
         if (response.data[i].is_dir) {
           dirs.push(response.data[i].name);
         } else {
-          files.push({
-            "name": response.data[i].name,
-            "last_modify": response.data[i].mod_time.slice(0, 10)
-          });
+          if (response.data[i].name !== ".DS_Store") {
+            files.push({
+              "name": response.data[i].name,
+              "last_modify": response.data[i].mod_time.slice(0, 10)
+            })
+          }
         }
       }
   
