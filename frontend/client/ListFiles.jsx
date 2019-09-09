@@ -5,11 +5,19 @@ class ListFiles extends React.Component {
     super(props)
 
     this.handleDownload = this.handleDownload.bind(this);
+    this.handleRename = this.handleRename.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
   }
 
   handleDownload(event) {
     this.props.onClick(event.target.id);
+  }
+
+  handleRename(event) {
+    let newName = prompt("Please enter new file name: ");
+    if (newName !== null) {
+      this.props.onRenameClick(event.target.id, newName)
+    }
   }
 
   handleDelete(event) {
@@ -24,6 +32,7 @@ class ListFiles extends React.Component {
         <p className="lastModify"> Modified at: {file.last_modify} </p>
         </div>
         <button id={file.name} onClick={this.handleDownload}> Download </button>
+        <button className="renameButton" id={file.name} onClick={this.handleRename}> Rename </button>
         <button className="deleteButton" id={file.name} onClick={this.handleDelete}> Delete </button>
         <hr className="HorizontalLine"></hr>
       </span>

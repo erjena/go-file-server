@@ -22,6 +22,7 @@ class App extends React.Component{
     this.handleDirClick = this.handleDirClick.bind(this);
     this.handlePathClick = this.handlePathClick.bind(this);
     this.handleDownload = this.handleDownload.bind(this);
+    this.handleRename = this.handleRename.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
   }
 
@@ -87,6 +88,23 @@ class App extends React.Component{
     })
   }
 
+  handleRename(oldName, newName) {
+    let oldPath = this.state.stack.slice();
+    oldPath.push(oldName);
+    let newPath = this.state.stack.slice();
+    newPath.push(newName);
+    axios.post('/rename', {
+      oldPath: oldPath,
+      newPath: newPath
+    })
+    .then((response) => {
+      this.requestFolder([]);
+    })
+    .catch((err) => {
+      console.log(err)
+    })
+  }
+
   handleDelete(fileName, isDir) {
     let path = this.state.stack.slice();
     path.push(fileName)
@@ -115,8 +133,8 @@ class App extends React.Component{
     return (
       <div className="list">
         <RenderPath path={this.state.stack} onClick={this.handlePathClick} />
-        <ListDir dirs={this.state.dirs} onClick={this.handleDirClick} onDeleteClick={this.handleDelete} />
-        <ListFiles files={this.state.files} onClick={this.handleDownload} onDeleteClick={this.handleDelete} />
+        <ListDir dirs={this.state.dirs} onClick={this.handleDirClick} onRenameClick={this.handleRename} onDeleteClick={this.handleDelete} />
+        <ListFiles files={this.state.files} onClick={this.handleDownload} onRenameClick={this.handleRename} onDeleteClick={this.handleDelete} />
         <button className="uploadButton" onClick={this.handleUpload}> Upload </button>
       </div>
     )

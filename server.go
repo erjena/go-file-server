@@ -29,8 +29,8 @@ type GeneralRequest struct {
 
 // RenameRequest to rename file
 type RenameRequest struct {
-	OldPath *[]string `json:"old_path"`
-	NewPath *[]string `json:"new_path"`
+	OldPath *[]string `json:"oldPath"`
+	NewPath *[]string `json:"newPath"`
 }
 
 func validateWorkdir() {
@@ -48,6 +48,7 @@ func setupServer() {
 	r := mux.NewRouter()
 	r.Methods("POST").Path("/list").HandlerFunc(listHandler)
 	r.Methods("POST").Path("/download").HandlerFunc(downloadHandler)
+	r.Methods("POST").Path("/rename").HandlerFunc(renameHandler)
 	r.Methods("POST").Path("/delete").HandlerFunc(deleteHandler)
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend/public")))
@@ -129,6 +130,29 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+func renameHandler(w http.ResponseWriter, r *http.Request) {
+	var req *RenameRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Was not able to parse path %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if req.OldPath == nil {
+		log.Printf("Missing old path")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if req.NewPath == nil {
+		log.Printf("Missing new path")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	os.Rename(workdir+strings.Join(*req.OldPath, "/"), workdir+strings.Join(*req.NewPath, "/"))
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
