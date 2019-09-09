@@ -15,7 +15,8 @@ class App extends React.Component{
     this.state = {
       stack: [],
       files: [],
-      dirs: []
+      dirs: [],
+      selectedFile: null
     }
 
     this.requestFolder = this.requestFolder.bind(this);
@@ -24,6 +25,8 @@ class App extends React.Component{
     this.handleDownload = this.handleDownload.bind(this);
     this.handleRename = this.handleRename.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleUpload = this.handleUpload.bind(this);
   }
 
   componentDidMount(event) {
@@ -67,10 +70,6 @@ class App extends React.Component{
     let newStack = this.state.stack.slice(0, ind+1); 
     this.requestFolder(newStack);
   }
-
-  // handleUpload() {
-
-  // }
 
   handleDownload(fileName) {
     let path = this.state.stack.slice();
@@ -129,12 +128,34 @@ class App extends React.Component{
     })
   }
 
+  handleChange(event) {
+    this.setState({ selectedFile: event.target.files[0] });
+  }
+
+  handleUpload(event) {
+    let formData = new FormData();
+    formData.append("dirName", JSON.stringify({ path: this.state.stack }))
+    formData.append("fileContent", this.state.selectedFile);
+    axios.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    .then((response) => {
+      this.requestFolder([]);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+  }
+
   render() {
     return (
       <div className="list">
         <RenderPath path={this.state.stack} onClick={this.handlePathClick} />
         <ListDir dirs={this.state.dirs} onClick={this.handleDirClick} onRenameClick={this.handleRename} onDeleteClick={this.handleDelete} />
         <ListFiles files={this.state.files} onClick={this.handleDownload} onRenameClick={this.handleRename} onDeleteClick={this.handleDelete} />
+        <input type="file" id="myFile" onChange={this.handleChange} />
         <button className="uploadButton" onClick={this.handleUpload}> Upload </button>
       </div>
     )

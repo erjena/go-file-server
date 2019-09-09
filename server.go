@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -50,6 +51,7 @@ func setupServer() {
 	r.Methods("POST").Path("/download").HandlerFunc(downloadHandler)
 	r.Methods("POST").Path("/rename").HandlerFunc(renameHandler)
 	r.Methods("POST").Path("/delete").HandlerFunc(deleteHandler)
+	r.Methods("POST").Path("/upload").HandlerFunc(uploadHandler)
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend/public")))
 
@@ -173,6 +175,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	info, err := os.Stat(currFile)
 	if err != nil {
 		log.Printf("Was not able to get file information %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -181,6 +184,44 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		os.Remove(currFile)
 	}
+}
+
+func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	var maxMemory int64 = 32 << 20
+	r.ParseMultipartForm(maxMemory)
+
+	var req *GeneralRequest
+	err := json.NewDecoder(strings.NewReader(r.FormValue("dirName"))).Decode(&req)
+	if err != nil {
+		log.Printf("Was not able to parse path %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if req.Path == nil {
+		log.Printf("Missing path")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	file, handler, err := r.FormFile("fileContent")
+	defer file.Close()
+	if err != nil {
+		log.Printf("Was not able to form file %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	currDir := workdir + strings.Join(*req.Path, "/")
+	f, err := os.OpenFile(currDir+handler.Filename, os.O_WRONLY|os.O_CREATE, 0755)
+	if err != nil {
+		log.Printf("Was not able to open file %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	defer f.Close()
+	io.Copy(f, file)
 }
 
 func main() {
