@@ -2,7 +2,9 @@
 
 A simple file server operates via REST API. Front-end implemented in React. Supports list, download, rename, upload and delete operations.
 
-[![](http://img.youtube.com/vi/5CDGxB96Vjg/0.jpg)](http://www.youtube.com/watch?v=5CDGxB96Vjg "")
+<p align="center">
+  <img src="https://media.giphy.com/media/YOwRD3MUrLPLf82aPE/giphy.gif" width="400px" height="300px" />
+</p>
 
 ## Installation
 
