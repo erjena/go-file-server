@@ -113,12 +113,24 @@ class App extends React.Component{
     .then((response) => {
       if (isDir) {
         let dir = this.state.dirs.slice();
-        let idx = dir.indexOf(fileName);
+        let idx;
+        for (let i = 0; i < dir.length; i++) {
+          if (dir[i].name === fileName) {
+            idx = i;
+            break;
+          }
+        }
         dir.splice(idx, 1); 
         this.setState({ dirs: dir })
       } else {
+        let idx;
         let files = this.state.files.slice();
-        let idx = files.indexOf(fileName);
+        for (let i = 0; i < files.length; i++) {
+          if (files[i].name === fileName) {
+            idx = i;
+            break;
+          }
+        }
         files.splice(idx, 1); 
         this.setState({ files: files })
       }
@@ -129,7 +141,9 @@ class App extends React.Component{
   }
 
   handleChange(event) {
-    this.setState({ selectedFile: event.target.files[0] });
+    this.setState({
+      selectedFile: event.target.files[0]
+    });
   }
 
   handleUpload(event) {
@@ -142,7 +156,7 @@ class App extends React.Component{
       }
     })
     .then((response) => {
-      this.requestFolder([]);
+      this.requestFolder(this.state.stack);
     })
     .catch((err) => {
       console.log(err);
@@ -155,8 +169,10 @@ class App extends React.Component{
         <RenderPath path={this.state.stack} onClick={this.handlePathClick} />
         <ListDir dirs={this.state.dirs} onClick={this.handleDirClick} onRenameClick={this.handleRename} onDeleteClick={this.handleDelete} />
         <ListFiles files={this.state.files} onClick={this.handleDownload} onRenameClick={this.handleRename} onDeleteClick={this.handleDelete} />
-        <input type="file" id="myFile" onChange={this.handleChange} />
-        <button className="uploadButton" onClick={this.handleUpload}> Upload </button>
+        <span>
+          <input type="file" id="myFile" value={this.value} onChange={this.handleChange} />
+          <button className="uploadButton" onClick={this.handleUpload}> Upload </button>
+        </span>
       </div>
     )
   }

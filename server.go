@@ -213,7 +213,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	currDir := workdir + strings.Join(*req.Path, "/")
-	f, err := os.OpenFile(currDir+handler.Filename, os.O_WRONLY|os.O_CREATE, 0755)
+	f, err := os.OpenFile(currDir+"/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		log.Printf("Was not able to open file %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
