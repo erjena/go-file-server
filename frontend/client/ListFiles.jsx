@@ -28,10 +28,9 @@ class ListFiles extends React.Component {
     let list = this.props.files.map((file) => (
       <span key={file.name}>
         <div className="textContainer">
-        <p> {file.name} </p>
+        <p id={file.name} onClick={this.handleDownload}> {file.name} </p>
         <p className="lastModify"> Modified at: {file.last_modify} </p>
         </div>
-        <button id={file.name} onClick={this.handleDownload}> Download </button>
         <button className="renameButton" id={file.name} onClick={this.handleRename}> Rename </button>
         <button className="deleteButton" id={file.name} onClick={this.handleDelete}> Delete </button>
         <hr className="HorizontalLine"></hr>
