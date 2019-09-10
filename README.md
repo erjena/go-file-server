@@ -1,6 +1,6 @@
 # Go File Server
 Yet another file server with frontend in ReactJS and RESTful backend in Go.
-![File server in action](https://media.giphy.com/media/YOwRD3MUrLPLf82aPE/giphy.gif "File server in action")
+![File server in action](demo.gif "File server in action")
 
 ## Running
 Step 1: Clone the repo
