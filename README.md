@@ -5,7 +5,7 @@ Yet another file server with frontend in ReactJS and RESTful backend in Go.
 ## Running
 Step 1: Clone the repo
 ```
-https://github.com/erjena/go-file-server.git
+$ git clone https://github.com/erjena/go-file-server.git
 ```
 Step 2: Build UI and start webpack
 ```
